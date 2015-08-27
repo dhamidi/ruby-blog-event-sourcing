@@ -2,7 +2,8 @@
 require 'blog_es'
 
 require 'minitest/autorun'
-
+require 'minitest/reporters'
+Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 class TestCase
   def initialize(receiver)
     @given = []
