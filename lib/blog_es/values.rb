@@ -47,6 +47,23 @@ module Blog::Values
     end
   end
 
+  class Email
+    def initialize
+      @value = nil
+    end
+
+    def parse(value)
+      @value = value.strip
+      raise Malformed.new(Email, value) unless @value =~ /@/
+
+      self
+    end
+
+    def to_s
+      @value
+    end
+  end
+
   class PostId
     def initialize
       @value = nil

@@ -27,7 +27,12 @@ module Blog
                               :title => Values::Text,
                               :body => Values::Text,
                             }, Post)
-
+    CommentOnPost = Command.new(:comment_on_post, {
+                                  :id => Values::PostId,
+                                  :name => Values::Text,
+                                  :body => Values::Text,
+                                  :email => Values::Email,
+                                }, Post)
 
     def initialize(event_store:, event_publisher:)
       @event_store = event_store
