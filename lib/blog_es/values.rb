@@ -83,4 +83,27 @@ module Blog::Values
       @value
     end
   end
+
+  class Integer
+    def initialize
+      @value = nil
+    end
+
+    def parse(value)
+      value = value.to_s.strip
+      if value =~ /[1-9][0-9]*/
+        @value = value.to_i
+      else
+        raise Malformed.new(Integer, value)
+      end
+    end
+
+    def to_s
+      @value.to_s
+    end
+
+    def to_i
+      @value
+    end
+  end
 end

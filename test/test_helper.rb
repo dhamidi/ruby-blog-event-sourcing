@@ -10,8 +10,8 @@ class TestCase
     @receiver = receiver
   end
 
-  def given(event)
-    @given.push(event)
+  def given(*event)
+    @given.push(*event)
     self
   end
 

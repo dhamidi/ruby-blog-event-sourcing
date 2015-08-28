@@ -10,7 +10,7 @@ class Blog::InMemoryEventPublisher
   end
 
   def publish_event(event)
-    @event_handlers.each do |handler|
+    @event_handlers.each do |(name, handler)|
       handler.handle_event(event)
     end
   end

@@ -4,7 +4,8 @@ class Blog::Post
   def initialize(id)
     @id = id
     @written = false
-    @commentId = 1
+    @comment_id = 1
+    @comment_emails = {}
   end
 
   def handle_command(command)
@@ -15,6 +16,8 @@ class Blog::Post
       edit(command)
     when :comment_on_post
       comment(command)
+    when :reject_comment_on_post
+      reject_comment(command)
     end
   end
 
@@ -23,8 +26,26 @@ class Blog::Post
     when :post_written
       @written = true
     when :post_commented
-      @commentId = @commentId + 1
+      @comment_id = @comment_id + 1
+      @comment_emails[event.get(:comment_id).to_i] = event.get(:email)
     end
+  end
+
+  def reject_comment(params)
+    err = params.errors
+
+    comment_id = params.get(:comment_id).to_i
+    err.add(:comment_id, :not_found) if comment_id > @comment_id
+
+    return err unless err.empty?
+
+    email = @comment_emails.fetch(comment_id)
+
+    return ::Blog::Event.new.with(:post_comment_rejected, {
+                                    comment_id: params.get(:comment_id),
+                                    email: email,
+                                    reason: params.get(:reason) { "" },
+                                  })
   end
 
   def comment(params)
@@ -45,7 +66,7 @@ class Blog::Post
     return err unless err.empty?
 
     return Blog::Event.new.with(:post_commented, {
-                                  comment_id: @commentId,
+                                  comment_id: @comment_id,
                                   name: name,
                                   email: email,
                                   body: body,

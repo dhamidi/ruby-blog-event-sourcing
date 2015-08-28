@@ -136,4 +136,69 @@ class BlogEsTest < Minitest::Spec
       end
     end
   end
+
+  describe "rejecting a comment" do
+    it "emits a :post_comment_rejected event" do
+      email = "foo@example.com"
+      TestCase.new(::Blog::Post.new("posts/a-post")).given(
+        ::Blog::Event.new.with(:post_written, {})
+      ).given(
+        ::Blog::Event.new.with(:post_commented, {comment_id: 1, email: email})
+      ).when(
+        ::Blog::Application::RejectCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 1,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Event, result)
+        assert_equal(result.name, :post_comment_rejected)
+        assert_equal(result.to_h[:email], email)
+      end
+    end
+
+    it "returns a not_found error if the comment does not exist" do
+      TestCase.new(::Blog::Post.new("posts/a-post")).given(
+        ::Blog::Event.new.with(:post_written, {}),
+        ::Blog::Event.new.with(:post_commented, {})
+      ).when(
+        ::Blog::Application::RejectCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 100,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Errors, result)
+        assert_equal(result.to_h[:comment_id], [:not_found])
+      end
+    end
+
+    it "sends an email stating the reason to the commenter" do
+      publisher = ::Blog::InMemoryEventPublisher.new
+      store = ::Blog::EventsInMemory.new
+      mailer = ::Blog::Mailer::InMemory.new
+      app = ::Blog::Application.new(event_store: store,
+                                    event_publisher: publisher,
+                                    mailer: mailer,
+                                 )
+
+      app.handle_event(::Blog::Event.new.with(:post_written, {
+                                                id: "posts/a-post",
+                                                body: "foo",
+                                                title: "bar",
+                                              }))
+      app.handle_event(::Blog::Event.new.with(:post_commented, {
+                                                id: "posts/a-post",
+                                                comment_id: 1,
+                                                email: "foo@example.com",
+                                                body: "bar",
+                                              }))
+      app.handle_event(::Blog::Event.new.with(:post_comment_rejected, {
+                                                comment_id: 1,
+                                                email: "foo@example.com",
+                                                reason: "spam",
+                                              }))
+      assert_equal(mailer.messages.length, 1)
+      assert_includes(mailer.messages.first.message.body, "spam")
+      assert_includes(mailer.messages.first.to, "foo@example.com")
+    end
+  end
 end

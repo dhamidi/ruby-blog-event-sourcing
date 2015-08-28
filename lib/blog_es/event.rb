@@ -12,6 +12,10 @@ class Blog::Event
     @payload.fetch(:id).to_s
   end
 
+  def get(key)
+    @payload[key.to_sym]
+  end
+
   def to_h
     @payload.merge(:event_name => @name)
   end
