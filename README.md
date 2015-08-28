@@ -1,36 +1,29 @@
-# BlogEs
+# Description
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/blog_es`. To experiment with that code, run `bin/console` for an interactive prompt.
+This is a simple blog built using [Event Sourcing][1].  It is provided
+in the form of a gem to stay independent of any web framework.  All
+the business logic is contained in this gem, the task that is left for
+the web framework is to handle the web -- accepting requests, parsing
+parameters and building responses.
 
-TODO: Delete this and the text above, and describe your gem
+[1]: http://martinfowler.com/eaaDev/EventNarrative.html#EventSourcing
 
-## Installation
+# Features
 
-Add this line to your application's Gemfile:
+The following features are to be implemented:
 
-```ruby
-gem 'blog_es'
-```
+- [X] Write a post
+- [X] Edit a post
+- [ ] Comment on a post.  Any comment needs to be verified by email.
+- [ ] Approve/reject a comment.  Comments only appear on the page
+  after they have been approved.  In case of rejection, the commenter
+  should get notified.
 
-And then execute:
+# What's missing
 
-    $ bundle
+Currently events are just stored and not processed any further to
+maintain secondary views of the data, such as REST resources or a
+database.
 
-Or install it yourself as:
-
-    $ gem install blog_es
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/blog_es.
-
+A command line tool for controlling the application without a web
+server would be nice.
