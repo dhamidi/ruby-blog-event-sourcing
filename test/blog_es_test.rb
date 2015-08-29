@@ -209,6 +209,7 @@ class BlogEsTest < Minitest::Spec
         ::Blog::Application::RejectCommentOnPost.fill({
                                                         id: 'posts/a-post',
                                                         comment_id: 1,
+                                                        reason: '',
                                                       })
       ).then do |result|
         assert_instance_of(::Blog::Event, result)

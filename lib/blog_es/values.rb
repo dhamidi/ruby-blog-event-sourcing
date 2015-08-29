@@ -53,7 +53,7 @@ module Blog::Values
     end
 
     def parse(value)
-      @value = value.strip
+      @value = value.to_s.strip
       raise Malformed.new(Email, value) unless @value =~ /@/
 
       self

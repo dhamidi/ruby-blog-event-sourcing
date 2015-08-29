@@ -30,9 +30,8 @@ class Blog::Command
     @values = {}
     @errors = Blog::Errors.new
     @fields.to_h.each do |(field, param)|
-      value = params[field.to_sym]
-      next unless param
       begin
+        value = params.fetch(field.to_sym)
         @values[field.to_sym] = param.new.parse(value)
       rescue Blog::Values::Malformed => e
         @errors.add(field, :malformed)
