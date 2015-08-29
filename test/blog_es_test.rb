@@ -258,4 +258,43 @@ class BlogEsTest < Minitest::Spec
       assert_includes(mailer.messages.first.to, "foo@example.com")
     end
   end
+
+  describe ::Blog::Application do
+    def clock(at:)
+
+      the_clock = Object.new
+      the_clock.instance_variable_set("@time", at)
+      def the_clock.now
+        @time
+      end
+
+      the_clock
+    end
+
+    describe "emit(event)" do
+      it "adds a timestamp based on the current clock to the event" do
+        publisher = ::Blog::InMemoryEventPublisher.new
+        store = ::Blog::EventsInMemory.new
+        mailer = ::Blog::Mailer::InMemory.new
+        now = clock(at: Time.now)
+        app = ::Blog::Application.new(event_store: store,
+                                      event_publisher: publisher,
+                                      mailer: mailer,
+                                      clock: now,
+                                     )
+        handler = Object.new.tap do |o|
+          def o.timestamp; @timestamp; end
+          def o.handle_event(event)
+            @timestamp = event.occurred_on
+          end
+        end
+
+        publisher.register(:check_timestamp, handler)
+
+        app.emit ::Blog::Event.new.with(:post_written, {})
+
+        assert_equal(handler.timestamp, now.now)
+      end
+    end
+  end
 end
