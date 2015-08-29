@@ -15,6 +15,7 @@ class BlogEsTest < Minitest::Spec
                                           })
       ).then do |result|
         assert_instance_of(::Blog::Event, result)
+        assert_equal(result.get(:id), 'posts/a-post')
         assert_equal(result.name.to_sym, :post_written)
       end
     end
@@ -47,6 +48,7 @@ class BlogEsTest < Minitest::Spec
                                          })
       ).then do |result|
         assert_instance_of(::Blog::Event, result)
+        assert_equal(result.get(:id), 'posts/a-post')
         assert_equal(result.to_h.values_at(:title, :body), ['a new title', 'a new body'])
       end
     end
@@ -79,6 +81,7 @@ class BlogEsTest < Minitest::Spec
       ).then do |result|
         assert_instance_of(::Blog::Event, result)
         assert_equal(result.name, :post_commented)
+        assert_equal(result.get(:id), 'posts/a-post')
       end
     end
 
@@ -162,6 +165,7 @@ class BlogEsTest < Minitest::Spec
                                                       })
       ).then do |result|
         assert_instance_of(::Blog::Event, result)
+        assert_equal(result.get(:id), 'posts/a-post')
         assert_equal(result.name, :post_comment_accepted)
       end
     end
@@ -209,6 +213,7 @@ class BlogEsTest < Minitest::Spec
       ).then do |result|
         assert_instance_of(::Blog::Event, result)
         assert_equal(result.name, :post_comment_rejected)
+        assert_equal(result.get(:id), 'posts/a-post')
         assert_equal(result.to_h[:email], email)
       end
     end

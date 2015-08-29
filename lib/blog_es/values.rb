@@ -71,7 +71,7 @@ module Blog::Values
 
     def parse(value)
       if value =~ %r{^posts/[a-z][-a-z0-9]*$}
-        @value = "posts/#{value.to_s.strip}"
+        @value = value.to_s.strip
       else
         raise Malformed.new(PostId, value)
       end

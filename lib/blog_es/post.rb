@@ -41,6 +41,7 @@ class Blog::Post
     return err unless err.empty?
 
     return ::Blog::Event.new.with(:post_comment_accepted, {
+                                    id: @id,
                                     comment_id: params.get(:comment_id)
                                   })
   end
@@ -55,6 +56,7 @@ class Blog::Post
     email = @comment_emails.fetch(comment_id)
 
     return ::Blog::Event.new.with(:post_comment_rejected, {
+                                    id: @id,
                                     comment_id: params.get(:comment_id),
                                     email: email,
                                     reason: params.get(:reason) { "" },
@@ -79,6 +81,7 @@ class Blog::Post
     return err unless err.empty?
 
     return Blog::Event.new.with(:post_commented, {
+                                  id: @id,
                                   comment_id: @comment_id,
                                   name: name,
                                   email: email,
@@ -101,7 +104,7 @@ class Blog::Post
                                     title: params.get(:title).to_s,
                                     body: params.get(:body).to_s,
                                     written_at: params.get(:now).to_s,
-                                    id: params.get(:id).to_s,
+                                    id: @id,
                                   })
     else
       return err
