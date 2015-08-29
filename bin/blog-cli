@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+require 'blog_es'
+
+store = Blog::EventsOnDisk.new('events.json', Blog::JSONSerializer)
+publisher = Blog::InMemoryEventPublisher.new
+kv = Blog::OnDiskKVStore.new('projections.db')
+all_posts = Blog::Projections::Posts.new(kv)
+publisher.register :all_posts, all_posts
+mailer = Blog::Mailer::InMemory.new
+app = Blog::Application.new(event_store: store, event_publisher: publisher, mailer: mailer)
+
+class UnknownCommand < StandardError; end
+
+Options = Struct.new(:command, :args) do
+  def new_command
+    begin
+      name = Blog::Application.name + "::"
+      name = name + command.split('-').map(&:capitalize).join('')
+      cmd = Object.const_get(name)
+    rescue NameError => e
+      raise UnknownCommand.new(command)
+    end
+
+    cmd.fill(args)
+  end
+
+  def parse(argv)
+    return unless argv.length > 0
+
+    self.args = Hash.new { "" }
+    self.command = argv.first
+
+    argv.slice(1, argv.length).each do |arg|
+      separator_at = arg.index("=")
+      if separator_at
+        name, value = arg.slice(0, separator_at), arg.slice(separator_at+1, arg.length)
+      else
+        name, value = arg, ""
+      end
+      self.args[name.to_sym] = value
+    end
+
+    self
+  end
+end
+
+opts = Options.new.parse(ARGV)
+puts app.handle_command(opts.new_command).inspect

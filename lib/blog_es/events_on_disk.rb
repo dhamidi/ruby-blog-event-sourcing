@@ -15,7 +15,7 @@ class Blog::EventsOnDisk
     begin
       File.open(@filename, 'r').each_line do |line|
         params = @serializer.deserialize(line)
-        event = Event.new.from_h(params)
+        event = Blog::Event.new.from_h(params)
         if (stream_id == event.receiver_id) || stream_id == :all
           handler.handle_event(event)
         end

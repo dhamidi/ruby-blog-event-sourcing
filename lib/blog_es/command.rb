@@ -29,17 +29,23 @@ class Blog::Command
   def fill(params)
     @values = {}
     @errors = Blog::Errors.new
-    params.to_h.each do |(field, value)|
-      param = @fields[field.to_sym]
+    @fields.to_h.each do |(field, param)|
+      value = params[field.to_sym]
       next unless param
       begin
         @values[field.to_sym] = param.new.parse(value)
       rescue Blog::Values::Malformed => e
         @errors.add(field, :malformed)
+      rescue KeyError => e
+        @errors.add(field, :required)
       end
     end
 
     self
+  end
+
+  def valid?
+    @errors.empty?
   end
 
   def get(field, &not_found)

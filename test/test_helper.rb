@@ -2,7 +2,7 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'blog_es'
 
 require 'minitest/autorun'
-require 'minitest/reporters'
+
 class TestCase
   def initialize(receiver)
     @given = []

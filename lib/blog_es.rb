@@ -61,6 +61,7 @@ module Blog
     end
 
     def handle_command(command)
+      return command.errors unless command.valid?
       command.acknowledge!
       begin
         receiver = command.receiver
