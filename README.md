@@ -19,6 +19,23 @@ The following features are to be implemented:
   after they have been approved.  In case of rejection, the commenter
   should get notified.
 
+On the read side of things:
+
+- [ ] Start page listing all posts.  Each entry lists:
+  - title of the post
+  - number of comments
+  - date posted
+  - first paragraph of the post displayed as content
+- [ ] Post detail page
+  - full content of the post
+  - lists all comments
+  - comment form
+- [ ] An ATOM feed
+- Admin area:
+  - [ ] write post page
+  - [ ] edit post page
+  - [ ] list all posts page
+
 # What's missing
 
 Currently events are just stored and not processed any further to
