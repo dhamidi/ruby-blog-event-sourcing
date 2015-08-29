@@ -19,6 +19,11 @@ class Blog::Event
     @payload.fetch(:id).to_s
   end
 
+  def ==(other)
+    return false unless other.is_a?(self.class)
+    return name == other.name && @payload == other.instance_variable_get(:"@payload")
+  end
+
   def get(key)
     @payload[key.to_sym]
   end
@@ -28,7 +33,7 @@ class Blog::Event
   end
 
   def from_h(hash)
-    @name = hash.delete(:event_name)
+    @name = hash.delete(:event_name).to_sym
     @occurred_on = hash.delete(:occurred_on)
     @payload = hash
 
