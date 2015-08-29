@@ -39,6 +39,10 @@ module Blog
                                   :email => Values::Email,
                                 }, Post)
 
+    AcceptCommentOnPost = Command.new(:accept_comment_on_post, {
+                                        :id => Values::PostId,
+                                        :comment_id => Values::Integer,
+                                      }, Post)
     RejectCommentOnPost = Command.new(:reject_comment_on_post, {
                                         :id => Values::PostId,
                                         :comment_id => Values::Integer,

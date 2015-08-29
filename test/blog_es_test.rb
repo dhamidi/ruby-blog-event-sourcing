@@ -137,7 +137,64 @@ class BlogEsTest < Minitest::Spec
     end
   end
 
+  describe "accepting a comment" do
+    it "returns an error if the post has not been written yet" do
+      TestCase.new(::Blog::Post.new("posts/a-post")).when(
+        ::Blog::Application::AcceptCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 1,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Errors, result)
+        assert_equal(result.get(:id), :not_found)
+      end
+    end
+
+    it "emits a :post_comment_accepted event" do
+      TestCase.new(::Blog::Post.new("posts/a-post")).given(
+        ::Blog::Event.new.with(:post_written, {})
+      ).given(
+        ::Blog::Event.new.with(:post_commented, {comment_id: 1})
+      ).when(
+        ::Blog::Application::AcceptCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 1,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Event, result)
+        assert_equal(result.name, :post_comment_accepted)
+      end
+    end
+
+    it "returns :not_found error when the comment does not exist" do
+      TestCase.new(::Blog::Post.new("posts/a-post")).given(
+        ::Blog::Event.new.with(:post_written, {})
+      ).given(
+        ::Blog::Event.new.with(:post_commented, {comment_id: 1})
+      ).when(
+        ::Blog::Application::AcceptCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 100,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Errors, result)
+        assert_equal(result.to_h[:comment_id], [:not_found])
+      end
+    end
+  end
   describe "rejecting a comment" do
+    it "returns an error if the post has not been written yet" do
+      TestCase.new(::Blog::Post.new("posts/a-post")).when(
+        ::Blog::Application::RejectCommentOnPost.fill({
+                                                        id: 'posts/a-post',
+                                                        comment_id: 1,
+                                                      })
+      ).then do |result|
+        assert_instance_of(::Blog::Errors, result)
+        assert_equal(result.get(:id), :not_found)
+      end
+    end
+
     it "emits a :post_comment_rejected event" do
       email = "foo@example.com"
       TestCase.new(::Blog::Post.new("posts/a-post")).given(

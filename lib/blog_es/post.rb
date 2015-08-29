@@ -18,6 +18,8 @@ class Blog::Post
       comment(command)
     when :reject_comment_on_post
       reject_comment(command)
+    when :accept_comment_on_post
+      accept_comment(command)
     end
   end
 
@@ -31,12 +33,23 @@ class Blog::Post
     end
   end
 
+  def accept_comment(params)
+    err = params.errors
+
+    require_written(err)
+    require_comment(err, params)
+    return err unless err.empty?
+
+    return ::Blog::Event.new.with(:post_comment_accepted, {
+                                    comment_id: params.get(:comment_id)
+                                  })
+  end
+
   def reject_comment(params)
     err = params.errors
 
-    comment_id = params.get(:comment_id).to_i
-    err.add(:comment_id, :not_found) if comment_id > @comment_id
-
+    require_written(err)
+    comment_id = require_comment(err, params)
     return err unless err.empty?
 
     email = @comment_emails.fetch(comment_id)
@@ -117,4 +130,15 @@ class Blog::Post
     return err
   end
 
+  private
+
+  def require_comment(errors, params)
+    comment_id = params.get(:comment_id).to_i
+    errors.add(:comment_id, :not_found) if comment_id > @comment_id
+    comment_id
+  end
+
+  def require_written(errors)
+    errors.add(:id, :not_found) unless @written
+  end
 end

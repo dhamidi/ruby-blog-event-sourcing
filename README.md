@@ -15,7 +15,7 @@ The following features are to be implemented:
 - [X] Write a post
 - [X] Edit a post
 - [X] Comment on a post.  Any comment needs to be verified by email.
-- [ ] Approve/reject a comment.  Comments only appear on the page
+- [X] Approve/reject a comment.  Comments only appear on the page
   after they have been approved.  In case of rejection, the commenter
   should get notified.
 
