@@ -1,0 +1,10 @@
+<article class="post">
+  <h1>Edit <q>%{post_title}</q></h1>
+  <form name="edit-post" action="%{post_edit}" method="POST">
+    <p><label>Title<input type="text" name="title" value="%{post_title}"></label></p>
+    <p><textarea name="body">%{post_body}</textarea></p>
+    <p>
+      <button type="submit">Edit</button>
+    </p>
+  </form>
+</article>

@@ -132,6 +132,31 @@ get %r{/admin/(posts/[^/]+)/pending-comments} do |post_id|
   Page.new(views, "Blog | #{post.title}", view).render.to_s
 end
 
+get %r{/admin/(posts/[^/]+)/actions/edit} do |post_id|
+  post = all_posts.find(post_id)
+  view = views.create :admin_post_edit
+  Blog::Presenter::PostEdit.new(view, post).render
+  Page.new(views, "Blog | #{post.title}", view).render.to_s
+end
+
+post %r{/admin/(posts/[^/]+)/actions/edit} do |post_id|
+  action = Blog::Application::EditPost.fill(
+    {
+      id: post_id,
+      title: params[:title],
+      body: params[:body],
+    }
+  )
+
+  result = app.handle_command(action)
+  if result.is_a?(Blog::Errors)
+    respond_with_error(result)
+  else
+    post = all_posts.find(post_id)
+    redirect post.links.rel(:edit)
+  end
+end
+
 post %r{/(posts/[^/]+)/actions/comment} do |post_id|
   post = all_posts.find(post_id)
   action = Blog::Application::CommentOnPost.fill(

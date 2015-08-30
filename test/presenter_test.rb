@@ -63,6 +63,43 @@ module Blog
         end
       end
 
+      describe PostEdit do
+        let(:post) do
+          make_post(id: 'the-post',
+                    title: "post title",
+                    body: "post body",
+                    comments: 0)
+        end
+
+        let(:view) do
+          DummyView.new
+        end
+
+        let(:presenter) do
+          PostEdit.new(view, post)
+        end
+
+        it "renders the post's title" do
+          presenter.render
+          value(view.log).must_include [:display_post_title, post.title]
+        end
+
+        it "renders the post's body" do
+          presenter.render
+          value(view.log).must_include [:display_post_body, post.body]
+        end
+
+        it "renders the post's body" do
+          presenter.render
+          value(view.log).must_include [:display_post_body, post.body]
+        end
+
+        it "renders the edit action" do
+          presenter.render
+          value(view.log).must_include [:display_post_edit, post.links.rel(:edit)]
+        end
+      end
+
       describe PostDetail do
         let(:post) do
           make_post(id: 'the-post',

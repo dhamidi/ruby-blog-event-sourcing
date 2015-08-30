@@ -55,6 +55,11 @@ form {
     border: 1px solid gray;
     margin-top: 2px;
     padding-left: 2ex;
+    padding-right: 2ex;
+}
+
+.post textarea {
+    min-height: 10em;
 }
 
 .post.admin {
