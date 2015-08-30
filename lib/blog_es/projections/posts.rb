@@ -22,6 +22,16 @@ module Blog::Projections
       @store.get('index')
     end
 
+    def find(id)
+      @store.get(id)
+    end
+
+    def recent
+      @store.get('recent').map do |id|
+        @store.get(id)
+      end
+    end
+
     def all
       index.map do |id|
         @store.get(id)
@@ -32,6 +42,8 @@ module Blog::Projections
       case event.name
       when :post_written
         add_post(event)
+      when :post_edited
+        update_post(event)
       when :post_commented
         add_comment_to_post(event)
       when :post_comment_accepted
@@ -52,7 +64,15 @@ module Blog::Projections
       post.comments = []
       post.pending_comments = []
       post.links = Links.new.add(:self, "/#{post.id}")
-      add_to_index(post)
+      add_to_index('index', post)
+      add_to_index('recent', post, append: false)
+      store(post)
+    end
+
+    def update_post(event)
+      post = load_from(event)
+      post.title = event.get(:title)
+      post.body = event.get(:body)
       store(post)
     end
 
@@ -97,17 +117,21 @@ module Blog::Projections
       @store.set(post.id, post)
     end
 
-    def add_to_index(post)
+    def add_to_index(index, post, append: true)
       posts = []
       begin
-        posts = @store.get('index')
+        posts = @store.get(index)
       rescue KeyError => e
         posts = []
       end
 
-      posts.push(post.id) unless posts.include?(post.id)
+      if append
+        posts.push(post.id)
+      else
+        posts.unshift(post.id)
+      end unless posts.include?(post.id)
 
-      @store.set('index', posts)
+      @store.set(index, posts)
 
       self
     end

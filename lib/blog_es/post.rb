@@ -103,7 +103,6 @@ class Blog::Post
       return Blog::Event.new.with(:post_edited, {
                                     title: params.get(:title).to_s,
                                     body: params.get(:body).to_s,
-                                    written_at: params.get(:now).to_s,
                                     id: @id,
                                   })
     else
