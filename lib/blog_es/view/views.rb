@@ -7,6 +7,7 @@ module Blog
 
       def add(key, &constructor)
         @views[key.to_sym] = constructor
+        self
       end
 
       def create(key)

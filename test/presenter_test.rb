@@ -9,11 +9,11 @@ module Blog
         end
 
         def display(key, value)
-          @log.push [:"display_#{key}",value]
+          @log.push [:"display_#{key}", value.to_s]
         end
 
         def link(key, href)
-          @log.push [:"link_#{key}", href]
+          @log.push [:"link_#{key}", href.to_s]
         end
 
         def log
@@ -25,7 +25,7 @@ module Blog
         subject = Projections::Post.new
         subject.title = title
         subject.body = body
-        subject.comments = [comments.times { Projections::Comment.new }]
+        subject.comments = comments.times.map { Projections::Comment.new }
         subject.links = Projections::Links.new
         subject.links.add(:self, "/#{id}")
 
@@ -56,6 +56,72 @@ module Blog
 
           expected = '<a href="/first">first</a><a href="/second">second</a>'
           value(view.to_s).must_equal(expected)
+        end
+      end
+
+      describe PostDetail do
+        let(:post) do
+          make_post(id: 'the-post',
+                    title: "post title",
+                    body: "post body",
+                    comments: 0)
+        end
+
+        let(:view) do
+          DummyView.new
+        end
+
+        let(:views) do
+          View::Views.new.add :post_detail_no_comments do
+            DummyView.new.tap do |v|
+              def v.to_s
+                "no comments"
+              end
+            end
+          end.add :post_detail_comment do
+            DummyView.new.tap do |v|
+              def v.to_s
+                "comment"
+              end
+            end
+          end
+        end
+
+        let(:presenter) do
+          PostDetail.new(view, post, views)
+        end
+
+        it "renders the post's title" do
+          presenter.render
+
+          value(view.log).must_include([:display_title, "post title"])
+        end
+
+        it "renders the post's body" do
+          presenter.render
+
+          value(view.log).must_include([:display_body, "post body"])
+        end
+
+        it "renders 'no comments' if the post has 0 comments" do
+          presenter.render
+
+          value(view.log).must_include([:display_comments, 'no comments'])
+        end
+
+        it "renders all comments if the post has more than 0 comments" do
+          views.add :post_detail_comment do
+            View::HTML.new '%{author} %{body}'
+          end
+          post.comments = [
+            Projections::Comment.new.tap do |c|
+              c.author = Projections::Author.new('author', '')
+              c.body = "comment"
+            end
+          ]
+
+          presenter.render
+          value(view.log).must_include([:display_comments, 'author comment'])
         end
       end
 

@@ -6,6 +6,10 @@ module Blog
         @separator = separator
       end
 
+      def ==(other)
+        @views == other.instance_variable_get(:"@views")
+      end
+
       def to_s
         @views.map(&:to_s).join(@separator)
       end
