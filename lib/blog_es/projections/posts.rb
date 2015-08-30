@@ -1,7 +1,11 @@
 module Blog::Projections
-  Post = Struct.new(:id, :title, :body, :written_at, :comments, :pending_comments) do
+  Post = Struct.new(:id, :title, :body, :written_at, :comments, :pending_comments, :links) do
     def comment_count
       comments.length
+    end
+
+    def summary
+      body.split("\n\n").first
     end
   end
 

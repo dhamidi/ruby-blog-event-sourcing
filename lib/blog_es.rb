@@ -20,8 +20,14 @@ require 'blog_es/mailer/in_memory'
 require 'blog_es/services/comment_notifier'
 require 'blog_es/json_serializer'
 require 'blog_es/projections/posts'
+require 'blog_es/projections/links'
 require 'blog_es/values'
 require 'blog_es/post'
+require 'blog_es/view/html'
+require 'blog_es/view/views'
+require 'blog_es/view/collection'
+require 'blog_es/presenter/post_on_index'
+require 'blog_es/presenter/index'
 
 module Blog
   class Application
