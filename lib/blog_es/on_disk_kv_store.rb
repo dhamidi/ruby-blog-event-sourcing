@@ -15,7 +15,11 @@ module Blog
 
     def get(key)
       @store.transaction(true) do
-        next @store[key.to_sym]
+        begin
+          next @store.fetch(key.to_sym)
+        rescue PStore::Error
+          raise KeyError.new("key not found: #{key.to_sym.inspect}")
+        end
       end
     end
 

@@ -14,6 +14,16 @@ module Blog::Projections
       @store = store
     end
 
+    def index
+      @store.get('index')
+    end
+
+    def all
+      index.map do |id|
+        @store.get(id)
+      end
+    end
+
     def handle_event(event)
       case event.name
       when :post_written
@@ -37,6 +47,7 @@ module Blog::Projections
       post.written_at = event.occurred_on
       post.comments = []
       post.pending_comments = []
+      add_to_index(post)
       store(post)
     end
 
@@ -79,6 +90,20 @@ module Blog::Projections
 
     def store(post)
       @store.set(post.id, post)
+    end
+
+    def add_to_index(post)
+      posts = []
+      begin
+        posts = @store.get('index')
+      rescue KeyError => e
+        posts = []
+      end
+      posts.push(post.id)
+
+      @store.set('index', posts)
+
+      self
     end
   end
 

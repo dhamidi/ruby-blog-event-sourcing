@@ -5,6 +5,7 @@ module KVStoreTest
          begin
            store.get(:does_not_exist)
          rescue StandardError => e
+         ensure
            value(e).must_be_instance_of(KeyError)
          end
        end
@@ -20,6 +21,7 @@ module KVStoreTest
          begin
            value(store.get(:foo)).must_equal nil
          rescue StandardError => e
+         ensure
            value(e).must_be_instance_of(KeyError)
          end
        end
