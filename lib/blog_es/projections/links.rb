@@ -4,8 +4,14 @@ module Blog::Projections
       @links = {}
     end
 
-    def []=(rel,url)
+    def add(rel, url)
       @links[rel.to_sym] = url
+
+      self
+    end
+
+    def ==(other)
+      return @links == other.instance_variable_get("@links")
     end
 
     def rel(rel)

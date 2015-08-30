@@ -51,6 +51,7 @@ module Blog::Projections
           value(post.body).must_equal 'post-body'
           value(post.written_at).must_equal now
           value(post.comment_count).must_equal 0
+          value(post.links).must_equal Links.new.add(:self, '/posts/a-post')
         end
 
         it "adds the post to the index" do

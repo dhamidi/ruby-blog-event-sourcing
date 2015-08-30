@@ -27,7 +27,7 @@ module Blog
         subject.body = body
         subject.comments = [comments.times { Projections::Comment.new }]
         subject.links = Projections::Links.new
-        subject.links[:self] = "/#{id}"
+        subject.links.add(:self, "/#{id}")
 
         subject
       end

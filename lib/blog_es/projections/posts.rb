@@ -51,6 +51,7 @@ module Blog::Projections
       post.written_at = event.occurred_on
       post.comments = []
       post.pending_comments = []
+      post.links = Links.new.add(:self, "/#{post.id}")
       add_to_index(post)
       store(post)
     end
@@ -103,7 +104,8 @@ module Blog::Projections
       rescue KeyError => e
         posts = []
       end
-      posts.push(post.id)
+
+      posts.push(post.id) unless posts.include?(post.id)
 
       @store.set('index', posts)
 
