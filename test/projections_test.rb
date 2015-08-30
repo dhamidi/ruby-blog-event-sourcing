@@ -132,7 +132,12 @@ module Blog::Projections
           value(post.body).must_equal 'post-body'
           value(post.written_at).must_equal now
           value(post.comment_count).must_equal 0
-          value(post.links).must_equal Links.new.add(:self, '/posts/a-post')
+          value(post.links).must_equal Links.new.
+                                        add(:self, '/posts/a-post').
+                                        add(:comment, '/posts/a-post/actions/comment').
+                                        add(:pending_comments, '/posts/a-post/pending-comments').
+                                        add(:accept_comment, '/posts/a-post/actions/accept-comment').
+                                        add(:reject_comment, '/posts/a-post/actions/reject-comment')
         end
 
         it "adds the post to the index" do
@@ -190,7 +195,7 @@ module Blog::Projections
 
           post = store.get('posts/a-post')
           comment = Comment.new.tap do |c|
-            c.id = "posts/a-post/comments/1"
+            c.id = 1
             c.body = "first comment"
             c.author = Author.new("Comment author", "foo@example.com")
             c.written_at = now
@@ -233,7 +238,7 @@ module Blog::Projections
 
           post = store.get('posts/a-post')
           comment = Comment.new.tap do |c|
-            c.id = "posts/a-post/comments/1"
+            c.id = 1
             c.body = "first comment"
             c.author = Author.new("Comment author", "foo@example.com")
             c.written_at = now

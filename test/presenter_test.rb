@@ -28,7 +28,9 @@ module Blog
         subject.comments = comments.times.map { Projections::Comment.new }
         subject.links = Projections::Links.new
         subject.links.add(:self, "/#{id}")
-
+        subject.links.add(:comment, "/#{id}/actions/comment")
+        subject.links.add(:accept_comment, "/#{id}/actions/accept-comment")
+        subject.links.add(:reject_comment, "/#{id}/actions/reject-comment")
         subject
       end
 
@@ -122,6 +124,62 @@ module Blog
 
           presenter.render
           value(view.log).must_include([:display_comments, 'author comment'])
+        end
+
+        it "renders a link to commenting on the post" do
+          presenter.render
+          value(view.log).must_include([:display_comment_url, post.links.rel(:comment)])
+        end
+      end
+
+      describe PendingComments do
+        let(:post) do
+          make_post(id: 'the-post',
+                    title: "post title",
+                    body: "first paragraph\n\nsecond paragraph",
+                    comments: 0)
+        end
+
+        let(:view) do
+          DummyView.new
+        end
+
+        let(:views) do
+          Blog::View::Views.new.add(:pending_comment) do
+            View::HTML.new '%{comment_id} '
+          end.add(:no_pending_comments) do
+            View::HTML.new 'no pending comments'
+          end.add(:pending_comments) do
+            View::HTML.new '%{comments}'
+          end
+        end
+
+        let(:presenter) do
+          PendingComments.new(view, post, views)
+        end
+
+        it "links the post's title to the post" do
+          presenter.render
+          value(view.log).must_include([:display_post_title, post.title])
+          value(view.log).must_include([:link_post_title, post.links.rel(:self)])
+        end
+
+        it "renders all pending comments on the post" do
+          author = Projections::Author.new('author-name', 'author-email')
+          now = Time.now
+          post.pending_comments = [
+            Projections::Comment.new(1, 'body', author, now),
+            Projections::Comment.new(2, 'body', author, now),
+          ]
+
+          presenter.render
+
+          value(view.log).must_include([:display_comments, '1 2 '])
+        end
+
+        it "renders a note if there are no pending comments" do
+          presenter.render
+          value(view.log).must_include([:display_comments, 'no pending comments'])
         end
       end
 

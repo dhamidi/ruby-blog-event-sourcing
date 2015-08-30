@@ -63,7 +63,13 @@ module Blog::Projections
       post.written_at = event.occurred_on
       post.comments = []
       post.pending_comments = []
-      post.links = Links.new.add(:self, "/#{post.id}")
+      post.links = Links.new.
+                   add(:self, "/#{post.id}").
+                   add(:comment, "/#{post.id}/actions/comment").
+                   add(:pending_comments, "/#{post.id}/pending-comments").
+                   add(:accept_comment, "/#{post.id}/actions/accept-comment").
+                   add(:reject_comment, "/#{post.id}/actions/reject-comment")
+
       add_to_index('index', post)
       add_to_index('recent', post, append: false)
       store(post)
@@ -79,7 +85,7 @@ module Blog::Projections
     def add_comment_to_post(event)
       post = @store.get(event.receiver_id)
       comment = Comment.new
-      comment.id = "#{post.id}/comments/#{event.get(:comment_id)}"
+      comment.id = event.get(:comment_id)
       comment.body = event.get(:body)
       comment.author = Author.new(event.get(:name), event.get(:email))
       comment.written_at = event.occurred_on
@@ -89,7 +95,7 @@ module Blog::Projections
 
     def accept_comment(event)
       post = load_from(event)
-      target_id = "#{post.id}/comments/#{event.get(:comment_id)}"
+      target_id = event.get(:comment_id)
       post.pending_comments.reject! do |comment|
         if comment.id == target_id
           comment.accepted_at = event.occurred_on
@@ -102,7 +108,7 @@ module Blog::Projections
 
     def reject_comment(event)
       post = load_from(event)
-      target_id = "#{post.id}/comments/#{event.get(:comment_id)}"
+      target_id = event.get(:comment_id)
       post.pending_comments.reject! do |comment|
          comment.id == target_id
       end

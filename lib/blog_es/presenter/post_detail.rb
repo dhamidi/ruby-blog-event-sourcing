@@ -23,6 +23,7 @@ module Blog
       def render
         @view.display :title, @post.title
         @view.display :body, @post.body
+        @view.display :comment_url, @post.links.rel(:comment)
 
         if @post.comment_count == 0
           @view.display :comments, @no_comments

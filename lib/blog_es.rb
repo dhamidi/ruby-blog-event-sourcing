@@ -28,6 +28,7 @@ require 'blog_es/view/views'
 require 'blog_es/view/collection'
 require 'blog_es/presenter/post_on_index'
 require 'blog_es/presenter/post_detail'
+require 'blog_es/presenter/pending_comments'
 require 'blog_es/presenter/index'
 
 module Blog
