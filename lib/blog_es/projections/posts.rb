@@ -66,9 +66,10 @@ module Blog::Projections
       post.links = Links.new.
                    add(:self, "/#{post.id}").
                    add(:comment, "/#{post.id}/actions/comment").
-                   add(:pending_comments, "/#{post.id}/pending-comments").
-                   add(:accept_comment, "/#{post.id}/actions/accept-comment").
-                   add(:reject_comment, "/#{post.id}/actions/reject-comment")
+                   add(:pending_comments, "/admin/#{post.id}/pending-comments").
+                   add(:accept_comment, "/admin/#{post.id}/actions/accept-comment").
+                   add(:reject_comment, "/admin/#{post.id}/actions/reject-comment").
+                   add(:edit, "/admin/#{post.id}/actions/edit")
 
       add_to_index('index', post)
       add_to_index('recent', post, append: false)

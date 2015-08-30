@@ -22,11 +22,15 @@ input, textarea {
     width: 100%;
 }
 
-button {
+button, .actions a {
     padding: 2px;
     border: 1px solid gray;
     background-color: white;
     font-size: 2ex;
+}
+
+.actions a {
+    text-decoration: none;
 }
 
 button:hover {
@@ -47,10 +51,14 @@ form {
     margin-top: 1em;
 }
 
-.comment {
+.comment, .post {
     border: 1px solid gray;
     margin-top: 2px;
     padding-left: 2ex;
+}
+
+.post.admin {
+    padding: 1ex;
 }
 
 .comment blockquote {

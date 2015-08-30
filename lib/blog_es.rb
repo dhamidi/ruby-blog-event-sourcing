@@ -30,6 +30,7 @@ require 'blog_es/presenter/post_on_index'
 require 'blog_es/presenter/post_detail'
 require 'blog_es/presenter/pending_comments'
 require 'blog_es/presenter/index'
+require 'blog_es/presenter/admin_index'
 
 module Blog
   class Application

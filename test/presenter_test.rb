@@ -29,8 +29,10 @@ module Blog
         subject.links = Projections::Links.new
         subject.links.add(:self, "/#{id}")
         subject.links.add(:comment, "/#{id}/actions/comment")
+        subject.links.add(:pending_comments, "/#{id}/pending-comments")
         subject.links.add(:accept_comment, "/#{id}/actions/accept-comment")
         subject.links.add(:reject_comment, "/#{id}/actions/reject-comment")
+        subject.links.add(:edit, "/#{id}/actions/actions/edit")
         subject
       end
 
@@ -181,6 +183,67 @@ module Blog
           presenter.render
           value(view.log).must_include([:display_comments, 'no pending comments'])
         end
+      end
+
+      describe AdminIndex do
+        let(:posts) do
+          [
+            make_post(id: 'first', title: 'first', body: 'first', comments: 0),
+            make_post(id: 'second', title: 'second', body: 'second', comments: 0),
+          ]
+        end
+
+        let(:view) do
+          DummyView.new
+        end
+
+        it "renders all posts" do
+          posts_on_index = []
+          views = View::Views.new.add :admin_post_on_index do
+            view = DummyView.new
+            posts_on_index.push view
+            view
+          end
+
+          AdminIndex.new(view, posts, views).render
+
+          value(posts_on_index.length).must_equal posts.length
+        end
+      end
+
+      describe AdminPostOnIndex do
+        let(:post) do
+          make_post(id: 'first', title: 'first', body: 'first', comments: 0)
+        end
+
+        let(:view) do
+          DummyView.new
+        end
+
+        let(:presenter) do
+          AdminPostOnIndex.new(view, post)
+        end
+
+        it "renders the post title" do
+          presenter.render
+          value(view.log).must_include [:display_post_title, post.title]
+        end
+
+        it "renders the count of pending comments" do
+          presenter.render
+          value(view.log).must_include [:display_pending_comment_count, "0 pending comments"]
+        end
+
+        it "links to the pending comments" do
+          presenter.render
+          value(view.log).must_include [:link_pending_comment_count, post.links.rel(:pending_comments)]
+        end
+
+        it "links to the edit page" do
+          presenter.render
+          value(view.log).must_include [:link_action_edit, post.links.rel(:edit)]
+        end
+
       end
 
       describe PostOnIndex do

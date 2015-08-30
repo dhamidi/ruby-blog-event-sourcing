@@ -135,9 +135,10 @@ module Blog::Projections
           value(post.links).must_equal Links.new.
                                         add(:self, '/posts/a-post').
                                         add(:comment, '/posts/a-post/actions/comment').
-                                        add(:pending_comments, '/posts/a-post/pending-comments').
-                                        add(:accept_comment, '/posts/a-post/actions/accept-comment').
-                                        add(:reject_comment, '/posts/a-post/actions/reject-comment')
+                                        add(:pending_comments, '/admin/posts/a-post/pending-comments').
+                                        add(:accept_comment, '/admin/posts/a-post/actions/accept-comment').
+                                        add(:reject_comment, '/admin/posts/a-post/actions/reject-comment').
+                                        add(:edit, '/admin/posts/a-post/actions/edit')
         end
 
         it "adds the post to the index" do

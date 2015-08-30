@@ -62,6 +62,7 @@ end
 
 get '/admin' do
   view = views.create :admin
+  Blog::Presenter::AdminIndex.new(view, all_posts.recent, views).render
   Page.new(views, "Blog | Admin", view).render.to_s
 end
 
@@ -89,7 +90,42 @@ post '/admin/actions/write-post' do
   end
 end
 
-get %r{/(posts/[^/]+)/pending-comments} do |post_id|
+post %r{/admin/(posts/[^/]+)/actions/accept-comment} do |post_id|
+  post = all_posts.find(post_id)
+  action = Blog::Application::AcceptCommentOnPost.fill(
+    {
+      id: post_id,
+      comment_id: params[:comment_id],
+    }
+  )
+
+  result = app.handle_command(action)
+  if result.is_a?(Blog::Errors)
+    respond_with_error(result)
+  else
+    redirect post.links.rel(:pending_comments)
+  end
+end
+
+post %r{/admin/(posts/[^/]+)/actions/reject-comment} do |post_id|
+  post = all_posts.find(post_id)
+  action = Blog::Application::RejectCommentOnPost.fill(
+    {
+      id: post_id,
+      comment_id: params[:comment_id],
+      reason: '',
+    }
+  )
+
+  result = app.handle_command(action)
+  if result.is_a?(Blog::Errors)
+    respond_with_error(result)
+  else
+    redirect post.links.rel(:pending_comments)
+  end
+end
+
+get %r{/admin/(posts/[^/]+)/pending-comments} do |post_id|
   post = all_posts.find(post_id)
   view = views.create :post_pending_comments
   Blog::Presenter::PendingComments.new(view, post, views).render
@@ -112,41 +148,6 @@ post %r{/(posts/[^/]+)/actions/comment} do |post_id|
     respond_with_error(result)
   else
     redirect post.links.rel(:self)
-  end
-end
-
-post %r{/(posts/[^/]+)/actions/accept-comment} do |post_id|
-  post = all_posts.find(post_id)
-  action = Blog::Application::AcceptCommentOnPost.fill(
-    {
-      id: post_id,
-      comment_id: params[:comment_id],
-    }
-  )
-
-  result = app.handle_command(action)
-  if result.is_a?(Blog::Errors)
-    respond_with_error(result)
-  else
-    redirect post.links.rel(:pending_comments)
-  end
-end
-
-post %r{/(posts/[^/]+)/actions/reject-comment} do |post_id|
-  post = all_posts.find(post_id)
-  action = Blog::Application::RejectCommentOnPost.fill(
-    {
-      id: post_id,
-      comment_id: params[:comment_id],
-      reason: '',
-    }
-  )
-
-  result = app.handle_command(action)
-  if result.is_a?(Blog::Errors)
-    respond_with_error(result)
-  else
-    redirect post.links.rel(:pending_comments)
   end
 end
 
