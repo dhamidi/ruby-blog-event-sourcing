@@ -1,0 +1,58 @@
+body {
+    max-width: 72ex;
+    margin: auto;
+    color: #333;
+}
+
+h1 { font-size: 4ex; }
+h2 { font-size: 3ex; }
+h3 { font-size: 2ex; }
+
+label {
+    color: gray;
+    text-transform: uppercase;
+    font-size: 2ex;
+}
+
+input, textarea {
+    font-size: 2ex;
+    padding: 2px;
+    border: 1px solid gray;
+    display: block;
+    width: 100%;
+}
+
+button {
+    padding: 2px;
+    border: 1px solid gray;
+    background-color: white;
+    font-size: 2ex;
+}
+
+button:hover {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+}
+
+form {
+    padding-top: 1em;
+}
+
+.comments {
+    margin-top: 1em;
+}
+
+.comment {
+    border: 1px solid gray;
+    margin-top: 2px;
+    padding-left: 2ex;
+}
+
+.comment blockquote {
+    margin-left: 0;
+}

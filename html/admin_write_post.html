@@ -1,0 +1,7 @@
+<h1>Write a post</h1>
+<form action="/admin/actions/write-post" method="POST">
+<p><label>Id<input type="text" pattern='posts/[^/]+' placeholder="posts/foo" name="id"></label></p>
+<p><label>Title<input type="text" required name="title"></label></p>
+<p><textarea placeholder="Your text..." name="body" required></textarea></p>
+<p><button type="submit">Write post</button></p>
+</form>

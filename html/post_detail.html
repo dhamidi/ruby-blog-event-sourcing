@@ -1,0 +1,14 @@
+<article class="post">
+  <h1>%{title}</h1>
+  <p>%{body}</p>
+  <a href="#comment-on-post">Comment on this</a>
+  <section class="comments">
+    %{comments}
+  </section>
+  <form id="comment-on-post" action="%{comment_url}" method="POST">
+    <p><label>Name<input type="text" name="name"></label></p>
+    <p><label>Email<input type="email" name="email"></label></p>
+    <p><textarea name="body" rows="4" cols="50"></textarea></p>
+    <p><button type="submit">Comment</button></p>
+  </form>
+</article>

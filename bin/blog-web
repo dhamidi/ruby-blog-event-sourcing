@@ -3,6 +3,8 @@
 require 'sinatra'
 require 'blog_es'
 
+use Rack::Static, :urls => ['/css'], :root => 'public'
+
 store = Blog::EventsOnDisk.new('events.json', Blog::JSONSerializer)
 publisher = Blog::InMemoryEventPublisher.new
 kv = Blog::OnDiskKVStore.new('projections.db')
@@ -29,136 +31,62 @@ class Page
   end
 end
 
-views.add :layout do
-  Blog::View::HTML.new <<'HTML'
-<!doctype html>
-<html xml:lang="en" lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>%{title}</title>
-    <style>
-body { max-width: 72ex; margin: auto; }
-h1 { font-size: 4ex; }
-h2 { font-size: 3ex; }
-h3 { font-size: 2ex; }
-    </style>
-  </head>
-  <body>
-    %{content}
-  </body>
-</html>
-HTML
-end
-
-views.add :index do
-  Blog::View::HTML.new <<'HTML'
-<h1>Blog</h1>
-<div>
-%{posts}
-</div>
-HTML
-end
-
-views.add :post_on_index do
-  Blog::View::HTML.new <<'HTML'
-<h2>%{title}</h2>
-<p>%{summary}</p>
-<p>%{comments}<p>
-HTML
-end
-
-views.add :post_detail do
-  Blog::View::HTML.new <<'HTML'
-<article class="post">
-  <h1>%{title}</h1>
-  <p>%{body}</p>
-  <a href="#comment-on-post">Comment on this</a>
-  %{comments}
-  <form id="comment-on-post" action="%{comment_url}" method="POST">
-    <p><label>Name:<input type="text" name="name"></label></p>
-    <p><label>Email:<input type="email" name="email"></label></p>
-    <p><textarea name="body" rows="4" cols="50"></textarea></p>
-    <p><button type="submit">Comment</button></p>
-  </form>
-</article>
-HTML
-end
-
-views.add :post_pending_comments do
-  Blog::View::HTML.new <<'HTML'
-<h1>%{post_title}</h1>
-<h2>Pending comments</h2>
-%{comments}
-HTML
-end
-
-views.add :pending_comments do
-  Blog::View::HTML.new <<'HTML'
-<table>
-<thead>
-  <th>Author</th>
-  <th>Email</th>
-  <th>Body</th>
-  <th>Action</th>
-</thead>
-<tbody>
-%{comments}
-</tbody>
-</table>
-HTML
-end
-
-views.add :pending_comment do
-  Blog::View::HTML.new <<'HTML'
-<tr>
- <td>%{author}</td>
- <td>%{email}</td>
- <td>%{body}</td>
- <td>
-  <form method="POST">
-    <input type="hidden" name="comment_id" value="%{comment_id}">
-    <p><button formaction="%{action_accept}">Accept</button></p>
-    <p><button formaction="%{action_reject}">Reject</button></p>
-  </form>
- </td>
-</tr>
-HTML
-end
-
-views.add :no_pending_comments do
-  Blog::View::HTML.new <<'HTML'
-<p>There are no pending comments for this post.</p>
-HTML
-end
-
-
-views.add :post_detail_no_comments do
-  Blog::View::HTML.new <<'HTML'
-<p>No comments</p>
-HTML
-end
-
-views.add :post_detail_comment do
-  Blog::View::HTML.new <<'HTML'
-<article class="comment">
-  <blockquote>
-    <cite>%{author}</cite>
-    <p>%{body}</p>
-  </blockquote>
-</article>
-HTML
-end
-
 publisher.register :all_posts, all_posts
 mailer = Blog::Mailer::InMemory.new
 app = Blog::Application.new(event_store: store, event_publisher: publisher, mailer: mailer)
 
+Dir['html/*.html'].sort.each do |filename|
+  view_name = filename[%r{html/(.*).html$}, 1]
+  contents = File.read(filename)
+  views.add view_name.to_sym do
+    Blog::View::HTML.new contents
+  end
+end
+
 store.replay :all, all_posts
+
+def respond_with_error(error)
+  list = '<dl class="errors">%s</dl>'
+  items = error.to_h.map do |(field, errors)|
+    '<dt>%s</dt><dd>%s</dt>' % [field, errors.join(', ')]
+  end
+
+  [422, {}, list % items.join('')]
+end
 
 get '/' do
   view = views.create :index
   Blog::Presenter::Index.new(view, all_posts.recent, views).render
   Page.new(views, 'Blog', view).render.to_s
+end
+
+get '/admin' do
+  view = views.create :admin
+  Page.new(views, "Blog | Admin", view).render.to_s
+end
+
+get '/admin/actions/write-post' do
+  view = views.create :admin_write_post
+  Page.new(views, "Blog | Write post", view).render.to_s
+end
+
+
+post '/admin/actions/write-post' do
+  action = Blog::Application::WritePost.fill(
+    {
+      id: params[:id],
+      title: params[:title],
+      body: params[:body],
+    }
+  )
+
+  result = app.handle_command(action)
+  if result.is_a?(Blog::Errors)
+    respond_with_error(result)
+  else
+    post = all_posts.find(params[:id])
+    redirect post.links.rel(:self)
+  end
 end
 
 get %r{/(posts/[^/]+)/pending-comments} do |post_id|
