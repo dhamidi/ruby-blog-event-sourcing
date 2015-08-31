@@ -6,6 +6,7 @@ require "blog_es/version"
 module Blog
 end
 
+require 'blog_es/configuration'
 require 'blog_es/command'
 require 'blog_es/errors'
 require 'blog_es/event'
@@ -17,6 +18,7 @@ require 'blog_es/on_disk_kv_store'
 require 'blog_es/mailer/message'
 require 'blog_es/mailer/envelope'
 require 'blog_es/mailer/in_memory'
+require 'blog_es/mailer/sendmail'
 require 'blog_es/services/comment_notifier'
 require 'blog_es/json_serializer'
 require 'blog_es/projections/posts'
@@ -32,6 +34,7 @@ require 'blog_es/presenter/pending_comments'
 require 'blog_es/presenter/index'
 require 'blog_es/presenter/admin_index'
 require 'blog_es/presenter/post_edit'
+require 'blog_es/presenter/post_commented'
 
 module Blog
   class Application
@@ -62,11 +65,11 @@ module Blog
                                         :reason => Values::Text,
                                       }, Post)
 
-    def initialize(event_store:, event_publisher:, mailer:, clock: Time)
+    def initialize(event_store:, event_publisher:, clock: Time, configuration:)
       @event_store = event_store
       @event_publisher = event_publisher
-      @mailer = mailer
       @clock = clock
+      @configuration = configuration
       setup_services
     end
 
@@ -101,9 +104,7 @@ module Blog
 
     private
     def setup_services
-      commentNotifier = Services::CommentNotifier.new(mailer: @mailer)
-
-      @event_publisher.register :comment_rejection, commentNotifier
+      @event_publisher.register :notify_comments, @configuration.comment_notifier
     end
   end
 end

@@ -238,9 +238,24 @@ class BlogEsTest < Minitest::Spec
       publisher = ::Blog::InMemoryEventPublisher.new
       store = ::Blog::EventsInMemory.new
       mailer = ::Blog::Mailer::InMemory.new
+      all_posts = ::Blog::Projections::Posts.new(::Blog::InMemoryKVStore.new)
+      publisher.register :all_posts, all_posts
+      views = ::Blog::View::Views.new.add :post_commented_mail do
+        ::Blog::View::HTML.new '%{post_title}'
+      end
+      config = ::Blog::Configuration.new
+      config.admin = "#{ENV['USER']}@localhost"
+
+      notifier = ::Blog::Services::CommentNotifier.new(
+        mailer: mailer,
+        posts: all_posts,
+        views: views,
+        admin: config.admin,
+      )
+      config.comment_notifier = notifier
       app = ::Blog::Application.new(event_store: store,
                                     event_publisher: publisher,
-                                    mailer: mailer,
+                                    configuration: config,
                                  )
 
       app.handle_event(::Blog::Event.new.with(:post_written, {
@@ -252,16 +267,20 @@ class BlogEsTest < Minitest::Spec
                                                 id: "posts/a-post",
                                                 comment_id: 1,
                                                 email: "foo@example.com",
+                                                name: "Author",
                                                 body: "bar",
                                               }))
       app.handle_event(::Blog::Event.new.with(:post_comment_rejected, {
+                                                id: "posts/a-post",
                                                 comment_id: 1,
                                                 email: "foo@example.com",
                                                 reason: "spam",
                                               }))
-      assert_equal(mailer.messages.length, 1)
-      assert_includes(mailer.messages.first.message.body, "spam")
-      assert_includes(mailer.messages.first.to, "foo@example.com")
+
+      value(mailer.messages.length).must_be :>=, 1
+      envelope = mailer.messages.last
+      value(envelope.message.body).must_include("spam")
+      value(envelope.to).must_include("foo@example.com")
     end
   end
 
@@ -281,12 +300,18 @@ class BlogEsTest < Minitest::Spec
       it "adds a timestamp based on the current clock to the event" do
         publisher = ::Blog::InMemoryEventPublisher.new
         store = ::Blog::EventsInMemory.new
-        mailer = ::Blog::Mailer::InMemory.new
         now = clock(at: Time.now)
+        config = ::Blog::Configuration.new
+        config.admin = ''
+        config.comment_notifier = Object.new.tap do |o|
+          def o.handle_event(event)
+          end
+        end
+
         app = ::Blog::Application.new(event_store: store,
                                       event_publisher: publisher,
-                                      mailer: mailer,
                                       clock: now,
+                                      configuration:  config,
                                      )
         handler = Object.new.tap do |o|
           def o.timestamp; @timestamp; end

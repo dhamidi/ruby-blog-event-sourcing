@@ -9,8 +9,37 @@ store = Blog::EventsOnDisk.new('events.json', Blog::JSONSerializer)
 publisher = Blog::InMemoryEventPublisher.new
 kv = Blog::OnDiskKVStore.new('projections.db')
 all_posts = Blog::Projections::Posts.new(kv)
-
+store.replay :all, all_posts
 views = Blog::View::Views.new
+send_mail_with_sendmail = Blog::Mailer::Sendmail.new
+config = Blog::Configuration.new
+config.admin = "#{ENV['USER']}@localhost"
+
+comment_notifier = Blog::Services::CommentNotifier.new(
+  mailer: send_mail_with_sendmail,
+  admin: config.admin,
+  posts: all_posts,
+  views: views,
+)
+
+config.comment_notifier = comment_notifier
+
+publisher.register :all_posts, all_posts
+
+app = Blog::Application.new(
+  event_store: store,
+  event_publisher: publisher,
+  configuration: config,
+)
+
+Dir['html/*.html'].sort.each do |filename|
+  view_name = filename[%r{html/(.*).html$}, 1]
+  contents = File.read(filename)
+  views.add view_name.to_sym do
+    Blog::View::HTML.new contents
+  end
+end
+
 
 class Page
   def initialize(views, title, content)
@@ -30,20 +59,6 @@ class Page
     @view.to_s
   end
 end
-
-publisher.register :all_posts, all_posts
-mailer = Blog::Mailer::InMemory.new
-app = Blog::Application.new(event_store: store, event_publisher: publisher, mailer: mailer)
-
-Dir['html/*.html'].sort.each do |filename|
-  view_name = filename[%r{html/(.*).html$}, 1]
-  contents = File.read(filename)
-  views.add view_name.to_sym do
-    Blog::View::HTML.new contents
-  end
-end
-
-store.replay :all, all_posts
 
 def respond_with_error(error)
   list = '<dl class="errors">%s</dl>'
